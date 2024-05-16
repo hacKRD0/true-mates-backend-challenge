@@ -1,7 +1,8 @@
+// Load modules
 const express = require("express");
 const authorizeJWT = require("../middleware/authorizeJWT");
 const checkForDuplicateUsers = require("../middleware/verifySignup");
-const { register, login } = require("../controllers/userController");
+const authController = require("../controllers").auth;
 
 const router = express.Router();
 
@@ -11,9 +12,9 @@ router.get("/test", authorizeJWT, (req, res) => {
 });
 
 // Registration Endpoint
-router.post("/register", checkForDuplicateUsers, register);
+router.post("/register", checkForDuplicateUsers, authController.register);
 
 // Login Endpoint
-router.post("/login", login);
+router.post("/login", authController.login);
 
 module.exports = router;

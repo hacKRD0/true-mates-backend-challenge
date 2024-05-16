@@ -1,25 +1,29 @@
-// Post model
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
-const User = require("./user");
-
-// Define the post schema
-const Post = sequelize.define("Post", {
-	description: DataTypes.TEXT,
-	photoUrl: DataTypes.STRING,
-});
-
-// Create a one-to-many relation between user and posts
-Post.belongsTo(User);
-User.hasMany(Post);
-
-// sequelize
-// 	.sync({ force: true })
-// 	.then(() => {
-// 		console.log("Posts table created successfully!");
-// 	})
-// 	.catch((error) => {
-// 		console.error("Unable to create table : ", error);
-// 	});
-
-module.exports = Post;
+"use strict";
+const { Model } = require("sequelize");
+module.exports = (sequelize, DataTypes) => {
+	class Post extends Model {
+		/**
+		 * Helper method for defining associations.
+		 * This method is not a part of Sequelize lifecycle.
+		 * The `models/index` file will call this method automatically.
+		 */
+		static associate(models) {
+			// define association here
+			Post.belongsTo(models.User, {
+				foreignKey: "userId",
+				onDelete: "CASCADE",
+			});
+		}
+	}
+	Post.init(
+		{
+			description: DataTypes.TEXT,
+			photoUrl: DataTypes.STRING,
+		},
+		{
+			sequelize,
+			modelName: "Post",
+		}
+	);
+	return Post;
+};

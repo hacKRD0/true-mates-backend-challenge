@@ -1,25 +1,30 @@
-// User model
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
-
-const User = sequelize.define("User", {
-	name: { type: DataTypes.STRING, allowNull: false },
-	email: {
-		type: DataTypes.STRING,
-		unique: true,
-		isEmail: true,
-		allowNull: false,
-	},
-	password: { type: DataTypes.STRING, allowNull: false },
-});
-
-// sequelize
-// 	.sync({ force: true })
-// 	.then(() => {
-// 		console.log("Users table created successfully!");
-// 	})
-// 	.catch((error) => {
-// 		console.error("Unable to create table : ", error);
-// 	});
-
-module.exports = User;
+"use strict";
+const { Model } = require("sequelize");
+module.exports = (sequelize, DataTypes) => {
+	class User extends Model {
+		/**
+		 * Helper method for defining associations.
+		 * This method is not a part of Sequelize lifecycle.
+		 * The `models/index` file will call this method automatically.
+		 */
+		static associate(models) {
+			// define association here
+			User.hasMany(models.Post, {
+				foreignKey: "userId",
+				as: "users",
+			});
+		}
+	}
+	User.init(
+		{
+			name: DataTypes.STRING,
+			email: DataTypes.STRING,
+			password: DataTypes.STRING,
+		},
+		{
+			sequelize,
+			modelName: "User",
+		}
+	);
+	return User;
+};

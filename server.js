@@ -1,9 +1,8 @@
 // Load required modules
 const express = require("express");
-const dotenv = require("dotenv").config();
 const cookieParser = require("cookie-parser");
-const authRouter = require("./src/routes/authRoutes");
-const postRouter = require("./src/routes/postRoutes");
+const routes = require("./src/routes");
+require("dotenv").config();
 
 // Assigning variable app to express
 const app = express();
@@ -14,8 +13,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 //routes for user API
-app.use("/api/users", authRouter);
-app.use("/api/posts", postRouter);
+app.use("/api/users", routes.authRouter);
+app.use("/api/posts", routes.postRouter);
 
 app.get("/", (req, res) => {
 	res.send("hello from express server");

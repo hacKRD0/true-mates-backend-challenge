@@ -1,10 +1,10 @@
 // Load modules
-// const express = require("express");
+const database = require("../models");
 const { format } = require("util");
-const Post = require("../models/post");
 const { storage, bucket } = require("../config/gcpStorage");
 const processFile = require("../middleware/upload");
 const sequelize = require("../config/database");
+const Post = database.Post;
 
 const createPost = async (req, res) => {
 	try {
