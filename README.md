@@ -1,9 +1,8 @@
 # True-mates Backend Challenge
 
-## Step 2: Create an Express.js app and use PostgreSQL for their database.
+## Step 1: Initialize the project
 
--   Create an Express server
--   Configure Sequelize and PostgreSQL
+-   Open the terminal, navigate to the project directory and initialize a new node.js project
 
 ```bash
 mkdir true-mates-backend
@@ -14,7 +13,8 @@ npm init -y  # Initializes a new Node.js project with default settings
 -   Install the required dependencies
 
 ```bash
-npm install express sequelize pg pg-hstore jsonwebtoken multer dotenv
+npm install express sequelize pg pg-hstore jsonwebtoken multer dotenv nodemon
+npm --save-dev sequelize-cli
 ```
 
 -   Initialize a new git repository
@@ -25,15 +25,9 @@ git init
 
 -   Add a .gitignore file from https://github.com/github/gitignore/blob/main/Node.gitignore to your project folder before committing anything.
 
--   Run the following commands to add all files to be committed, commit changes and push them
+-   Store your GCS secret key JSON file in the root directory of the project folder
+-   Add the secret key file name to the gitignore file.
 
-```bash
-git add .
-git commit -m "Setup complete"
-git branch -M main
-git remote add origin "Your github repo link"
-git push -u origin main
-```
-
-1. JWT token auth for already logged in users
-2. Check is request header has jwt token and check
+-   Create a .sequelizerc file and initialize a sequelize project
+-   Create a .env file to store environment variables
+-   Add scripts to package.json to run sequelize commands to create, migrate, seed, reset and reseed the database
