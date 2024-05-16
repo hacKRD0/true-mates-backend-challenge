@@ -6,6 +6,10 @@ const postController = require("../controllers").posts;
 // Assigning variable router to express.Router
 const router = express.Router();
 
-router.post("/create", authorizeJWT, postController.createPost);
+router.post("/createPost", authorizeJWT, postController.createPost);
+
+router.get("/getPost/:id", authorizeJWT, postController.getPost);
+
+router.put("/editPost/:id", authorizeJWT, postController.editPost);
 
 module.exports = router;

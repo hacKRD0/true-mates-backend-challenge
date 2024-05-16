@@ -4,6 +4,9 @@ const { format } = require("util");
 const { storage, bucket } = require("../config/gcpStorage");
 const processFile = require("../middleware/upload");
 const sequelize = require("../config/database");
+const moment = require("moment");
+const { error } = require("console");
+const { where } = require("sequelize");
 const Post = database.Post;
 
 const createPost = async (req, res) => {
@@ -79,4 +82,41 @@ const createPost = async (req, res) => {
 	}
 };
 
-module.exports = { createPost };
+const getPost = async (req, res) => {
+	const postId = req.params.id;
+	// console.log(req);
+	Post.findOne({ where: { id: postId } })
+		.then((post) => {
+			let timeAgo = moment(post.createdAt).fromNow();
+			return res.status(200).send({ timeAgo: timeAgo });
+		})
+		.catch((error) => {
+			return res
+				.status(404)
+				.send({ message: "Post not found!", error: error.message });
+		});
+};
+
+const editPost = async (req, res) => {
+	const postId = req.params.id;
+	const userId = req.user.userId;
+	const { description } = req.body;
+
+	Post.update(
+		{ description: description },
+		{ where: { id: postId, userId: userId } }
+	)
+		.then((post) => {
+			res.status(200).send({
+				message: "Description updated successfully!",
+				post,
+			});
+		})
+		.catch((error) => {
+			return res
+				.status(404)
+				.send({ message: "Post update failed!", error: error.message });
+		});
+};
+
+module.exports = { createPost, getPost, editPost };
