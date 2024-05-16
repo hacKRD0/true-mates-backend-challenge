@@ -53,7 +53,7 @@ const createPost = async (req, res) => {
 				Post.create({
 					description: description,
 					photoUrl: publicUrl,
-					UserId: user.userId,
+					userId: user.userId,
 				})
 					.then((post) => {
 						return res.status(201).send({
