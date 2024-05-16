@@ -13,6 +13,7 @@ const createPost = async (req, res) => {
 		const { description } = req.body;
 		const { file } = req;
 		const { user } = req;
+		console.log(user);
 
 		// Make sure the post contains an image
 		if (!file) return res.status(400).send("No photo uploaded");
@@ -49,7 +50,11 @@ const createPost = async (req, res) => {
 
 			sequelize.sync().then(() => {
 				// Add the new post with the public url to the database
-				Post.create({ description: description, photoUrl: publicUrl })
+				Post.create({
+					description: description,
+					photoUrl: publicUrl,
+					UserId: user.userId,
+				})
 					.then((post) => {
 						return res.status(201).send({
 							message: "Post creation successful!",
