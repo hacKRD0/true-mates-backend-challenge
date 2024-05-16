@@ -34,3 +34,6 @@ git branch -M main
 git remote add origin "Your github repo link"
 git push -u origin main
 ```
+
+1. JWT token auth for already logged in users
+2. Check is request header has jwt token and check
