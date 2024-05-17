@@ -5,8 +5,7 @@ const { storage, bucket } = require("../config/gcpStorage");
 const processFile = require("../middleware/upload");
 const sequelize = require("../config/database");
 const moment = require("moment");
-const { error } = require("console");
-const { where } = require("sequelize");
+const crypto = require("crypto");
 const Post = database.Post;
 
 const createPost = async (req, res) => {
@@ -14,67 +13,64 @@ const createPost = async (req, res) => {
 		// Process the file using the upload middleware
 		await processFile(req, res);
 		const { description } = req.body;
-		const { file } = req;
+		const { files } = req;
 		const { user } = req;
-		console.log(user);
 
 		// Make sure the post contains an image
-		if (!file) return res.status(400).send("No photo uploaded");
+		if (!files || files.length === 0)
+			return res.status(400).send("No photo uploaded");
 
-		// Create a new blob in the bucket and upload the file data
-		const blob = bucket.file(req.file.originalname);
-		const blobStream = blob.createWriteStream({ resumable: false });
+		const photoUrls = await Promise.all(
+			files.map((file) => {
+				const hash = crypto
+					.createHash("md5")
+					.update(`${user.userId}-${file.originalname}-${Date.now()}`)
+					.digest("hex");
 
-		console.log("Starting blobstream");
-		blobStream.on("error", (error) => {
-			res.status(500).send({
-				message: `File upload failed due to internal error!`,
-				error: error.message,
-			});
-		});
+				// Create a new blob in the bucket and upload the file data
+				const hashedKey = "http://tinyurl/" + hash;
+				const blob = bucket.file(hashedKey);
+				const blobStream = blob.createWriteStream({ resumable: false });
 
-		blobStream.on("finish", async (data) => {
-			// Create a url for direct file access over http
-			console.log("Starting blobstream finish");
-			const publicUrl = format(
-				`https://storage.googleapis.com/${bucket.name}/${blob.name}`
-			);
-			// console.log(publicUrl);
-			// try {
-			// 	// Make the file public
-			// 	await bucket.file(req.file.originalname).makePublic();
-			// } catch (error) {
-			// 	return res.status(500).send({
-			// 		message: `File upload successful: ${req.file.originalname}, but public access is denied!`,
-			// 		url: publicUrl,
-			// 		error: error.message,
-			// 	});
-			// }
-
-			sequelize.sync().then(() => {
-				// Add the new post with the public url to the database
-				Post.create({
-					description: description,
-					photoUrl: publicUrl,
-					userId: user.userId,
-				})
-					.then((post) => {
-						return res.status(201).send({
-							message: "Post creation successful!",
-							post,
-						});
-					})
-					.catch((error) => {
-						return res.status(400).send({
-							message: "Post creation failed!",
-							error: error.message,
-						});
+				blobStream.on("error", (error) => {
+					res.status(500).send({
+						message: `File upload failed due to internal error!`,
+						error: error.message,
 					});
-			});
-		});
+				});
 
-		blobStream.end(req.file.buffer);
+				blobStream.on("finish", () => {
+					// Construct the public URL
+					const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+					resolve(publicUrl);
+				});
+
+				blobStream.end(file.buffer);
+			})
+		);
+
+		sequelize.sync().then(() => {
+			// Add the new post with the public url to the database
+			Post.create({
+				description: description,
+				photoUrls: photoUrls,
+				userId: user.userId,
+			})
+				.then((post) => {
+					return res.status(201).send({
+						message: "Post creation successful!",
+						post,
+					});
+				})
+				.catch((error) => {
+					return res.status(400).send({
+						message: "Post creation failed!",
+						error: error.message,
+					});
+				});
+		});
 	} catch (error) {
+		console.log(error);
 		res.status(500).send({
 			message: `Post creation failed due to internal server error!`,
 			error: error.message,

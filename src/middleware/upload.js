@@ -8,7 +8,7 @@ const maxSize = 2 * 1024 * 1024;
 let processFile = Multer({
 	storage: Multer.memoryStorage(),
 	limits: { fileSize: maxSize },
-}).single("file");
+}).array("files", 5);
 
 // Allows the middleware object to run asynchronously
 let processFileMiddleware = util.promisify(processFile);

@@ -1,5 +1,5 @@
 "use strict";
-const { Model } = require("sequelize");
+const { Model, Sequelize } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
 	class Post extends Model {
 		/**
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
 	Post.init(
 		{
 			description: DataTypes.TEXT,
-			photoUrl: DataTypes.STRING,
+			photoUrls: Sequelize.ARRAY(DataTypes.STRING),
 		},
 		{
 			sequelize,
