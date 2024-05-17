@@ -32,20 +32,17 @@ const createPost = async (req, res) => {
 				const blob = bucket.file(hashedKey);
 				const blobStream = blob.createWriteStream({ resumable: false });
 
-				blobStream.on("error", (error) => {
-					res.status(500).send({
-						message: `File upload failed due to internal error!`,
-						error: error.message,
+				return new Promise((resolve, reject) => {
+					blobStream.on("error", (error) => reject(error));
+
+					blobStream.on("finish", () => {
+						// Construct the public URL using the hash
+						const publicUrl = `https://storage.googleapis.com/${bucket.name}/${hash}`;
+						resolve(hashedKey);
 					});
-				});
 
-				blobStream.on("finish", () => {
-					// Construct the public URL
-					const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-					resolve(publicUrl);
+					blobStream.end(file.buffer);
 				});
-
-				blobStream.end(file.buffer);
 			})
 		);
 
