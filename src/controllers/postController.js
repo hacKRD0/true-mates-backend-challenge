@@ -1,6 +1,5 @@
 // Load modules
 const database = require("../models");
-const { format } = require("util");
 const { storage, bucket } = require("../config/gcpStorage");
 const processFile = require("../middleware/upload");
 const sequelize = require("../config/database");
@@ -14,9 +13,9 @@ const createPost = async (req, res) => {
 		await processFile(req, res);
 		const { description } = req.body;
 		const { files } = req;
-		const { user } = req;
+		const userId = req.user.userId;
 
-		// Make sure the post contains an image
+		// Makes sure the post contains an image
 		if (!files || files.length === 0)
 			return res.status(400).send("No photo uploaded");
 
@@ -27,7 +26,7 @@ const createPost = async (req, res) => {
 					.update(`${user.userId}-${file.originalname}-${Date.now()}`)
 					.digest("hex");
 
-				// Create a new blob in the bucket and upload the file data
+				// Creates a new blob in the bucket and upload the file data
 				const hashedKey = "http://tinyurl/" + hash;
 				const blob = bucket.file(hashedKey);
 				const blobStream = blob.createWriteStream({ resumable: false });
@@ -36,7 +35,7 @@ const createPost = async (req, res) => {
 					blobStream.on("error", (error) => reject(error));
 
 					blobStream.on("finish", () => {
-						// Construct the public URL using the hash
+						// Constructs the public URL using the hash
 						const publicUrl = `https://storage.googleapis.com/${bucket.name}/${hash}`;
 						resolve(hashedKey);
 					});
@@ -51,7 +50,7 @@ const createPost = async (req, res) => {
 			Post.create({
 				description: description,
 				photoUrls: photoUrls,
-				userId: user.userId,
+				userId: userId,
 			})
 				.then((post) => {
 					return res.status(201).send({
