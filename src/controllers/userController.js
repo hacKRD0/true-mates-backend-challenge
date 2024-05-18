@@ -127,7 +127,7 @@ const acceptOrDeclineFriend = async (req, res) => {
 const getFriends = async (req, res) => {
 	// Parsing the request
 	const userId = req.user.userId;
-	console.log(userId);
+	// console.log(userId);
 
 	try {
 		// Finds all the friends of the current user
@@ -140,6 +140,7 @@ const getFriends = async (req, res) => {
 
 		// Extract a list of friendIds
 		const friendIds = friends.map((friend) => friend.friendId);
+
 		// Finds and returns the name and email of each friend in friendIds
 		const friendDetails = await User.findAll({
 			where: {
@@ -157,7 +158,7 @@ const getFriends = async (req, res) => {
 						JOIN "UsersFriends" as uf2 ON uf1."friendId" = uf2."friendId"
 						WHERE uf1."userId" = :userId AND uf2."userId" = :friendId
 						`;
-			// console.log(mutualFriendsQuery);
+
 			// Executes the query using sequelize
 			const result = await database.sequelize.query(mutualFriendsQuery, {
 				replacements: {
@@ -166,28 +167,19 @@ const getFriends = async (req, res) => {
 				},
 				type: database.Sequelize.QueryTypes.SELECT,
 			});
-			// console.log(
-			// 	"This is result[0]:", result
-			// );
+
 			// Returns the number of mutual friends
 			return result[0].mutualfriendcount;
-			// return new Promise((resolve, reject) => {
-			// 	resolve(result[0].mutualfriendcount);
-			// 	reject(result);
-			// });
 		};
 
+		// Updates the friendDetails list with the mutualFriendsCount for each friend
 		for (let friend of friendDetails) {
 			friend.dataValues.mutualFriendsCount = await getMutualFriendsCount(
 				userId,
 				friend.id
 			);
 		}
-		// Returns an object with the friend's details and the number of mutual friends with the user
-		// return {
-		// 	friend: friendDetail,
-		// 	mutualFriends: getMutualFriendsCount(userId, friendDetail.id),
-		// };
+
 		// Returns a response with the friends list containing friend details and mutual friends
 		return res.status(200).send({
 			message: "Here are your friends!",

@@ -27,7 +27,7 @@ const createPost = async (req, res) => {
 				// Creates a hash using the current time, original filename and the userId as the secret key
 				const hash = crypto
 					.createHash("md5")
-					.update(`${user.userId}-${file.originalname}-${Date.now()}`)
+					.update(`${userId}-${file.originalname}-${Date.now()}`)
 					.digest("hex");
 
 				// Creates a new blob in the bucket and upload the file data
@@ -81,11 +81,11 @@ const createPost = async (req, res) => {
 
 // Function to get post by Id
 const getPost = async (req, res) => {
-	// Parsing the request
+	// Parsing the requestuserId: userId
 	const postId = req.params.id;
 	const userId = req.user.userId;
 	// Finds the post with the given postId
-	Post.findOne({ where: { id: postId, userId: userId } })
+	Post.findOne({ where: { id: postId } })
 		.then((post) => {
 			// Calculates the time difference and returns it
 			let timeAgo = moment(post.createdAt).fromNow();

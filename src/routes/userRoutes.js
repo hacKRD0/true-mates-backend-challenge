@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/addFriend", authorizeJWT, userController.addFriend);
 
 // Route to accept or decline a friend request
-router.post(
+router.put(
 	"/acceptOrDeclineFriend",
 	authorizeJWT,
 	userController.acceptOrDeclineFriend
