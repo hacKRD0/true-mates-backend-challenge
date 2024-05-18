@@ -1,6 +1,6 @@
-# True-mates Backend Challenge
+# Requirement 1
 
-## Step 2: Create an Express.js app and use PostgreSQL for their database.
+## 1. Create an Express.js app and use PostgreSQL for their database.
 
 -   Create an Express server
 -   Configure Sequelize and PostgreSQL
@@ -35,5 +35,19 @@ git remote add origin "Your github repo link"
 git push -u origin main
 ```
 
-1. JWT token auth for already logged in users
-2. Check is request header has jwt token and check
+## Scope
+
+-   Since the tech stack was already decided I dove right into creating the features.
+-
+
+## Validations
+
+-   The app prevents duplicate user registration
+
+## Features
+
+-   User gives name, email and password while registering. If the email is not already in the database, the app creates a new user with a hashed password stored to the database in place of the plaintext password.
+-   User gives email and password while logging in. If the email does not exist in the user or the password entered is incorrect then corresponding messages are sent back. If the log in is successful then the request returns a JWT bearer token.
+-   When a user tries to create a post, there is check in place to make sure that a bearer token is present, is valid and has not expired before the creation of a post is allowed.
+-   Post is created only after storing the uploaded image to GCS. If the upload fails for some reason then post creation fails and returns a message with the reason.
+-   Posts database only stores the GCS bucket key for each image for future access.

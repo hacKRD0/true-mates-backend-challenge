@@ -132,3 +132,4 @@ dist
 # GCS Credentials
 api_call_screenshots/truemates-2929f7329b71.json
 truemates-2929f7329b71.json
+gcs_secret_key_krd.json
