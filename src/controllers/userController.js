@@ -1,5 +1,4 @@
 // Load modules
-const { where } = require("sequelize");
 const database = require("../models");
 const User = database.User;
 const UsersFriends = database.UsersFriends;
@@ -11,20 +10,49 @@ const addFriend = async (req, res) => {
 	const { friendId } = req.body;
 	const userId = req.user.userId;
 
+	// Doesn't allow a user to friend themself
+	if (userId === friendId)
+		return res.status(200).send({ message: "You can't friend yourself!" });
+
+	// Checks if there is an existing request from the person user wants to send a friend request to.
+	FriendRequests.findOne({
+		where: {
+			senderId: friendId,
+			receiverId: userId,
+		},
+	})
+		.then((friendRequest) => {
+			if (friendRequest && friendRequest.status === "accepted") {
+				// Sends this response if the user is already a friend
+				return res.status(201).send({
+					message: "User already a friend!",
+				});
+			} else if (friendRequest && friendRequest.status === "pending") {
+				// Sends this response if user has an existing friend request sent from the person they are trying to send a friend request to
+				return res.status(200).send({
+					message: "The user has already sent you a friend request!",
+				});
+			}
+		})
+		.catch((error) => {
+			pass;
+		});
+
+	// Creates the friend request if it doesn't already exist
 	FriendRequests.findOrCreate({
 		where: {
 			senderId: userId,
 			receiverId: friendId,
 		},
 	})
-		.then((friendrequest) => {
-			if (friendrequest[1]) {
+		.then((friendRequest) => {
+			if (friendRequest[1]) {
 				// Sends this response if the request has been created
 				return res.status(201).send({
 					message: "Friend request sent!",
 				});
 			} else {
-				if (friendrequest[0].status === "accepted") {
+				if (friendRequest[0].status === "accepted") {
 					// Sends this response if the user is already a friend
 					return res.status(201).send({
 						message: "User already a friend!",
@@ -95,88 +123,82 @@ const acceptOrDeclineFriend = async (req, res) => {
 		});
 };
 
+// Function gets a list of all friends with their details and the number of mutual friends
 const getFriends = async (req, res) => {
 	// Parsing the request
 	const userId = req.user.userId;
+	console.log(userId);
 
-	// Finds all the friends of the current user
-	UsersFriends.findAll({
-		where: {
-			userId: { userId: userId },
+	try {
+		// Finds all the friends of the current user
+		const friends = await UsersFriends.findAll({
+			where: {
+				userId: userId,
+			},
 			attributes: ["friendId"],
-		},
-	})
-		.then((friends) => {
-			// Extract a list of friendIds
-			const friendIds = friends.map((friend) => friend.friendId);
-
-			// Finds and returns the name and email of each friend in friendIds
-			User.findAll({
-				where: {
-					id: friendIds,
-				},
-				attributes: ["id", "name", "email"],
-			})
-				.then((friendDetails) => {
-					// Creates a list with details of each friend along with the number mutual friends
-					const friendsList = friendDetails.map((friendDetail) => {
-						const getMutualFriendsCount = async (
-							userId,
-							friendId
-						) => {
-							// Query to get number of mutual friends from the UserFriends table
-							const mutualFriendsQuery = `
-						SELECT COUNT(*) as mutualFriendCount
-						FROM UserFriends as uf1
-						JOIN UserFriends as uf2 ON uf1.friendId = uf2.friendId
-						WHERE uf1.userId = :userId AND uf2.userId = :friendId;
-						`;
-							// Executes the query using sequelize
-							const result = await sequelize.query(
-								mutualFriendsQuery,
-								{
-									replacements: {
-										userId: userId,
-										friendId: friendId,
-									},
-									type: Sequelize.QueryTypes.SELECT,
-								}
-							);
-
-							// Returns the number of mutual friends
-							return result[0].mutualFriendCount;
-						};
-
-						// Returns an object with the friend's details and the number of mutual friends with the user
-						return {
-							friend: friendDetail,
-							mutualFriends: getMutualFriendsCount(
-								userId,
-								friendDetail.id
-							),
-						};
-					});
-
-					// Returns a response with the friends list containing friend details and mutual friends
-					return res.status(200).send({
-						message: "Here are your friends!",
-						friendsList,
-					});
-				})
-				.catch((error) => {
-					return res.status(400).send({
-						message:
-							"Sorry! We couldn't grab your friends' details.",
-						error: error.message,
-					});
-				});
-		})
-		.catch((error) => {
-			return res.status(400).send({
-				message: "Sorry! We couldn't fetch your friends list.",
-				error: error.message,
-			});
 		});
+
+		// Extract a list of friendIds
+		const friendIds = friends.map((friend) => friend.friendId);
+		// Finds and returns the name and email of each friend in friendIds
+		const friendDetails = await User.findAll({
+			where: {
+				id: friendIds,
+			},
+			attributes: ["id", "name", "email"],
+		});
+
+		// Creates a list with details of each friend along with the number mutual friends
+		const getMutualFriendsCount = async (userId, friendId) => {
+			// Query to get number of mutual friends from the UsersFriends table
+			const mutualFriendsQuery = `
+						SELECT COUNT(*) as mutualFriendCount
+						FROM "UsersFriends" as uf1
+						JOIN "UsersFriends" as uf2 ON uf1."friendId" = uf2."friendId"
+						WHERE uf1."userId" = :userId AND uf2."userId" = :friendId
+						`;
+			// console.log(mutualFriendsQuery);
+			// Executes the query using sequelize
+			const result = await database.sequelize.query(mutualFriendsQuery, {
+				replacements: {
+					userId: userId,
+					friendId: friendId,
+				},
+				type: database.Sequelize.QueryTypes.SELECT,
+			});
+			// console.log(
+			// 	"This is result[0]:", result
+			// );
+			// Returns the number of mutual friends
+			return result[0].mutualfriendcount;
+			// return new Promise((resolve, reject) => {
+			// 	resolve(result[0].mutualfriendcount);
+			// 	reject(result);
+			// });
+		};
+
+		for (let friend of friendDetails) {
+			friend.dataValues.mutualFriendsCount = await getMutualFriendsCount(
+				userId,
+				friend.id
+			);
+		}
+		// Returns an object with the friend's details and the number of mutual friends with the user
+		// return {
+		// 	friend: friendDetail,
+		// 	mutualFriends: getMutualFriendsCount(userId, friendDetail.id),
+		// };
+		// Returns a response with the friends list containing friend details and mutual friends
+		return res.status(200).send({
+			message: "Here are your friends!",
+			friendDetails,
+		});
+	} catch (error) {
+		return res.status(400).send({
+			message: "Sorry! Couldn't retrieve friends' details.",
+			error: error.message,
+		});
+	}
 };
 
 module.exports = { addFriend, acceptOrDeclineFriend, getFriends };

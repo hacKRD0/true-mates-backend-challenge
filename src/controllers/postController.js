@@ -7,6 +7,7 @@ const moment = require("moment");
 const crypto = require("crypto");
 const Post = database.Post;
 
+// Function to create a new post
 const createPost = async (req, res) => {
 	try {
 		// Process the file using the upload middleware
@@ -78,23 +79,27 @@ const createPost = async (req, res) => {
 	}
 };
 
+// Function to get post by Id
 const getPost = async (req, res) => {
 	// Parsing the request
 	const postId = req.params.id;
+	const userId = req.user.userId;
 	// Finds the post with the given postId
-	Post.findOne({ where: { id: postId } })
+	Post.findOne({ where: { id: postId, userId: userId } })
 		.then((post) => {
 			// Calculates the time difference and returns it
 			let timeAgo = moment(post.createdAt).fromNow();
 			return res.status(200).send({ timeAgo: timeAgo });
 		})
 		.catch((error) => {
+			console.log(error);
 			return res
 				.status(404)
 				.send({ message: "Post not found!", error: error.message });
 		});
 };
 
+// Function to edit a post's description
 const editPost = async (req, res) => {
 	// Parsing the request
 	const postId = req.params.id;
@@ -119,6 +124,7 @@ const editPost = async (req, res) => {
 		});
 };
 
+// Function to get all posts (paginated)
 const getPosts = async (req, res) => {
 	// Parsing the request
 	const page = parseInt(req.query.page, 10) || 1;

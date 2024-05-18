@@ -11,10 +11,10 @@ router.get("/test", authorizeJWT, (req, res) => {
 	res.send({ message: "hello world!" });
 });
 
-// Registration Endpoint
+// Route to register a user
 router.post("/register", checkForDuplicateUsers, authController.register);
 
-// Login Endpoint
+// Route to login a user
 router.post("/login", authController.login);
 
 module.exports = router;

@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const User = database.User;
 require("dotenv").config();
 
-// Registration Function
+// Function to register(or create) a user
 const register = async (req, res) => {
 	// Parsing the request
 	const { name, email, password } = req.body;
@@ -30,7 +30,7 @@ const register = async (req, res) => {
 		});
 };
 
-// Login Function
+// Function to login a user
 const login = async (req, res) => {
 	// Parsing the request
 	const { email, password } = req.body;
