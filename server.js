@@ -13,12 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 //routes for user API
-app.use("/api/users", routes.authRouter);
+app.use("/api/auth", routes.authRouter);
 app.use("/api/posts", routes.postRouter);
-
-app.get("/", (req, res) => {
-	res.send("hello from express server");
-});
+app.use("/api/users", routes.userRouter);
 
 // Setting up port and listening to server connection
 const PORT = process.env.PORT || 3000;

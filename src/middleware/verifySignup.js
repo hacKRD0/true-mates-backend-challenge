@@ -1,3 +1,4 @@
+// Middleware function to prevent a duplicate user from being created
 // Load modules
 const User = require("../models").User;
 

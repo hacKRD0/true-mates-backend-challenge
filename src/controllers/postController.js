@@ -11,6 +11,7 @@ const createPost = async (req, res) => {
 	try {
 		// Process the file using the upload middleware
 		await processFile(req, res);
+		// Parsing the request
 		const { description } = req.body;
 		const { files } = req;
 		const userId = req.user.userId;
@@ -19,8 +20,10 @@ const createPost = async (req, res) => {
 		if (!files || files.length === 0)
 			return res.status(400).send("No photo uploaded");
 
+		// Creates the array of unique urls for the uploaded photos
 		const photoUrls = await Promise.all(
 			files.map((file) => {
+				// Creates a hash using the current time, original filename and the userId as the secret key
 				const hash = crypto
 					.createHash("md5")
 					.update(`${user.userId}-${file.originalname}-${Date.now()}`)
@@ -31,12 +34,13 @@ const createPost = async (req, res) => {
 				const blob = bucket.file(hashedKey);
 				const blobStream = blob.createWriteStream({ resumable: false });
 
+				// Uploads the file to GCS
 				return new Promise((resolve, reject) => {
+					// Returns the rejected promise with reason for failed upload of the file
 					blobStream.on("error", (error) => reject(error));
 
 					blobStream.on("finish", () => {
-						// Constructs the public URL using the hash
-						const publicUrl = `https://storage.googleapis.com/${bucket.name}/${hash}`;
+						// Returns the hashedKey to be stored in the photoUrls array
 						resolve(hashedKey);
 					});
 
@@ -46,7 +50,7 @@ const createPost = async (req, res) => {
 		);
 
 		sequelize.sync().then(() => {
-			// Add the new post with the public url to the database
+			// Add the new post with the photoUrls array to the database
 			Post.create({
 				description: description,
 				photoUrls: photoUrls,
@@ -75,10 +79,12 @@ const createPost = async (req, res) => {
 };
 
 const getPost = async (req, res) => {
+	// Parsing the request
 	const postId = req.params.id;
-	// console.log(req);
+	// Finds the post with the given postId
 	Post.findOne({ where: { id: postId } })
 		.then((post) => {
+			// Calculates the time difference and returns it
 			let timeAgo = moment(post.createdAt).fromNow();
 			return res.status(200).send({ timeAgo: timeAgo });
 		})
@@ -90,10 +96,12 @@ const getPost = async (req, res) => {
 };
 
 const editPost = async (req, res) => {
+	// Parsing the request
 	const postId = req.params.id;
 	const userId = req.user.userId;
 	const { description } = req.body;
 
+	// Updates the post description if the userId that sent the put request is the owner of the post
 	Post.update(
 		{ description: description },
 		{ where: { id: postId, userId: userId } }
@@ -111,4 +119,30 @@ const editPost = async (req, res) => {
 		});
 };
 
-module.exports = { createPost, getPost, editPost };
+const getPosts = async (req, res) => {
+	// Parsing the request
+	const page = parseInt(req.query.page, 10) || 1;
+	const limit = parseInt(req.query.limit, 10) || 3;
+	const offset = (page - 1) * limit;
+
+	// Finds all posts ordered by 'createdAt' and returns upto limit number of posts from index offset of the result
+	Post.findAndCountAll({
+		limit: limit,
+		offset: offset,
+		order: [["createdAt", "DESC"]],
+	})
+		.then(async (result) => {
+			return res.status(200).json({
+				message: "Success!",
+				data: result,
+			});
+		})
+		.catch((error) => {
+			res.status(400).send({
+				message: "Failed",
+				error: error.message,
+			});
+		});
+};
+
+module.exports = { createPost, getPost, editPost, getPosts };

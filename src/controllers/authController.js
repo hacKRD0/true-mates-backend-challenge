@@ -7,6 +7,7 @@ require("dotenv").config();
 
 // Registration Function
 const register = async (req, res) => {
+	// Parsing the request
 	const { name, email, password } = req.body;
 	// Sync the database
 	// Add user to database with the hashed password
@@ -31,6 +32,7 @@ const register = async (req, res) => {
 
 // Login Function
 const login = async (req, res) => {
+	// Parsing the request
 	const { email, password } = req.body;
 	// Check if user is registered
 	User.findOne({ where: { email } })
