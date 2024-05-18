@@ -1,4 +1,4 @@
-# True-mates Backend Challenge
+# Requirement 2
 
 ## Step 1: Initialize the project
 
@@ -31,3 +31,17 @@ git init
 -   Create a .sequelizerc file and initialize a sequelize project
 -   Create a .env file to store environment variables
 -   Add scripts to package.json to run sequelize commands to create, migrate, seed, reset and reseed the database
+
+## Scope
+
+## Validations
+
+-   The number of images uploaded cannot be more than 5.
+-   Created an md5 hash for each uploaded file using the filename, creation dateTime and the userId of the creator for unique keys for each image being stored in GCS.
+-   Post description can only be edited by a user if that user is its creator.
+
+## Features
+
+-   Sequelize by default adds createdAt and updatedAt fields when creating new models. The app utilizes this attribute when calculating the time difference for a get request made to a specific post.
+-   The photoUrl attribute of type STRING was replaced by photoUrls attribute of type ARRAY of STRINGS, which stores an array of urls (GCS storage keys for each image).
+-   The description of a post can be edited with a put request.
